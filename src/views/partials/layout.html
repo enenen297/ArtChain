@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body, * {
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+
+        body {
+            background-color: #f4efe6;
+            background-size: 52px 52px;
+            background-attachment: fixed;
+        }
+
+        .glass-pill-nav {
+            background: #f4efe6;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid rgba(0, 0, 0, 0.958);
+            border-radius: 10px;
+            box-shadow: 7px 10px 0 0 rgba(0, 0, 0, 0.938);
+        }
+    </style>
+</head>
+<body class="text-slate-900 min-h-screen flex flex-col justify-between antialiased selection:bg-indigo-500 selection:text-black">
+
+    <header class="w-full max-w-6xl mx-auto pt-6 px-4 z-50">
+        <div class="glass-pill-nav rounded-full px-6 py-3.5 flex items-center justify-between shadow-2xl shadow-slate-950/20">
+            
+            <a href="/" class="flex items-center space-x-3 group pl-2">
+                <div class="w-10 h-10  flex items-center justify-center">
+                        <img src="assets/logo.svg" alt="ArtChain Logo" >
+                </div>
+                <div>
+                    <span class="text-xl font-bold tracking-tight text-black transition-colors">ARTCHAIN</span>
+                </div>
+            </a>
+
+            <nav class="hidden md:flex items-center space-x-10 text-base font-medium">
+                <a href="/" class="px-4 py-2 rounded-full text-[#0f0e0e] hover:text-white hover:bg-slate-800 transition-all">Home</a>
+                <a href="/register" class="px-4 py-2 rounded-full text-[#0f0e0e] hover:text-white hover:bg-slate-800 transition-all">Register</a>
+                <a href="/verify" class="px-4 py-2 rounded-full text-[#0f0e0e] hover:text-white hover:bg-slate-800 transition-all">Verify</a>
+            </nav>
+
+            <div class="flex items-center space-x-4 pr-1">
+                <button id="connectBtn" class="inline-flex items-center justify-center px-5 py-2 text-base font-medium rounded-full bg-slate-950 text-[#f4efe6] hover:scale-105 transition-all duration-200 shadow-md">
+                    <span id="connectBtnText">Connect MetaMask</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

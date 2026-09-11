@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArtChain | Register Artwork</title>
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+</head>
+<body class="text-slate-800 bg-[#f4efe6] min-h-screen flex flex-col">
+
+    <div id="navbar-placeholder"></div>
+
+    <main class="max-w-4xl mx-auto px-6 py-12 w-full flex-grow font-sans text-slate-800">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight mb-3 text-slate-900">
+                Register your artwork
+            </h1>
+            <p class="text-slate-600 text-sm sm:text-base max-w-xl mx-auto">
+                Create a digital fingerprint for your artwork and record its provenance on the blockchain.
+        </div>
+
+        <!-- Wallet Connection Badge -->
+        <div id="walletAddressBox" class="hidden mb-6 p-3 rounded-xl bg-white/60 backdrop-blur-md border border-indigo-500/30 flex items-center justify-between text-xs font-mono">
+            <span class="text-slate-600 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Connected Wallet:
+            </span>
+            <span id="walletAddress" class="text-indigo-600 font-semibold bg-indigo-500/10 px-3 py-1 rounded-lg border border-indigo-500/20">--</span>
+        </div>
+
+        <!-- Upload Card -->
+        <div class="glass-panel p-8 rounded-2xl shadow-xl relative overflow-hidden bg-white/70 backdrop-blur-xl border border-stone-200/80">
+            <form id="uploadForm" action="/register/api" method="POST" enctype="multipart/form-data" class="space-y-6">
+                <!-- Inputs Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Artwork Title <span class="text-purple-600">*</span></label>
+                            <input type="text" id="title" name="title" required placeholder="e.g. Mona Lisa Digital Edition" 
+                                   class="w-full bg-stone-50 border border-stone-300 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Artist Name</label>
+                            <input type="text" id="artist" name="artist" placeholder="e.g. Leonardo da Vinci" 
+                                   class="w-full bg-stone-50 border border-stone-300 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Description</label>
+                            <textarea id="description" name="description" rows="4" placeholder="Provide a brief story or details about the artwork..." 
+                                      class="w-full bg-stone-50 border border-stone-300 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all resize-none"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- File Upload Area -->
+                    <div class="flex flex-col">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Original Image File <span class="text-purple-600">*</span></label>
+                        <div class="relative flex-grow border-2 border-dashed border-stone-300 hover:border-indigo-500 rounded-xl p-4 transition-all bg-stone-50/50 flex flex-col items-center justify-center text-center group cursor-pointer" onclick="document.getElementById('imageInput').click()">
+                            <input type="file" id="imageInput" name="artwork" accept="image/*" required class="hidden" onchange="handleFileSelect(event)">
+
+                            <!-- State 1: Default Upload Prompt -->
+                            <div id="uploadPrompt" class="space-y-3">
+                                <div class="w-12 h-12 rounded-full bg-white border border-stone-200 flex items-center justify-center mx-auto text-slate-400 group-hover:text-indigo-600 group-hover:scale-110 transition-all shadow-sm">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                </div>
+                                <div class="text-xs text-slate-500">
+                                    <span class="text-indigo-600 font-semibold">Click to upload</span> or drag and drop
+                                    <p class="text-[10px] text-slate-400 mt-1">PNG, JPG, WEBP (Max 10MB)</p>
+                                </div>
+                            </div>
+
+                            <!-- State 2: Image Preview -->
+                            <div id="previewContainer" class="hidden absolute inset-0 p-2 bg-stone-100/90 rounded-xl flex flex-col items-center justify-center">
+                                <img id="imagePreview" src="" alt="Preview" class="max-h-full max-w-full object-contain rounded-lg shadow-md">
+                                <span class="absolute bottom-3 right-3 text-[10px] font-mono bg-white/90 px-2 py-1 rounded text-slate-600 border border-stone-200 shadow-sm">Click to change image</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submitBtn" class="w-full py-4 px-6 rounded-xl font-bold text-sm tracking-wide bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 hover:opacity-95 text-white shadow-lg shadow-indigo-500/20 transition-all duration-200 transform active:scale-[0.99] flex items-center justify-center space-x-2">
+                    <span id="btnText">1. Hash image & Upload to IPFS</span>
+                    <svg id="btnIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
+            </form>
+
+            <!-- Result Dashboard -->
+            <div id="resultBox" class="hidden mt-8 pt-6 border-t border-stone-200 space-y-4">
+                <div class="flex items-center space-x-2 text-emerald-600 text-xs font-semibold uppercase tracking-wider">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>Artwork ready for registration</span>
+                </div>
+
+                <div class="grid grid-cols-1 gap-3 font-mono text-xs">
+                    <div class="bg-stone-100 p-3.5 rounded-xl border border-stone-200">
+                        <span class="text-slate-500 block text-[10px] uppercase mb-1">Artwork Hash:</span>
+                        <span id="resHash" class="text-amber-700 break-all"></span>
+                    </div>
+                    <div class="bg-stone-100 p-3.5 rounded-xl border border-stone-200">
+                        <span class="text-slate-500 block text-[10px] uppercase mb-1">IPFS Metadata:</span>
+                        <span id="resUri" class="text-indigo-600 break-all"></span>
+                    </div>
+                </div>
+
+                <!-- Mint On-Chain Action -->
+                <button id="mintBtn" onclick="mintNFTOnChain()" class="w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center space-x-2">
+                    <span>2.Record provenance on-chain</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let CONTRACT_ADDRESS = "";
+        let CONTRACT_ABI = [];
+
+        async function loadContractConfig() {
+            try {
+                const response = await fetch('/api/contract-info');
+                if (!response.ok) throw new Error("Chưa deploy hoặc lỗi server");
+
+                const data = await response.json();
+                CONTRACT_ADDRESS = data.address;
+                CONTRACT_ABI = data.abi;
+
+                console.log("Contract Address:", CONTRACT_ADDRESS);
+                console.log("Contract ABI loaded successfully, functions:", CONTRACT_ABI.length);
+            } catch (error) {
+                console.error("Lỗi khi tải cấu hình Contract:", error);
+            }
+        }
+
+        loadContractConfig();
+
+        // 1. Tải Navbar tự động & Kiểm tra trạng thái ví ban đầu
+        fetch('/views/partials/layout.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('navbar-placeholder').innerHTML = data;
+                checkExistingWalletConnection();
+            })
+            .catch(error => console.error('Lỗi khi tải Navbar:', error));
+
+        // Tự động cập nhật Wallet Badge nếu người dùng đã kết nối ví từ trước
+        async function checkExistingWalletConnection() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                    if (accounts.length > 0) {
+                        updateWalletBadge(accounts[0]);
+                    }
+                } catch (err) {
+                    console.error("Lỗi kiểm tra ví:", err);
+                }
+            }
+        }
+
+        function updateWalletBadge(address) {
+            const walletBox = document.getElementById('walletAddressBox');
+            const walletSpan = document.getElementById('walletAddress');
+            if (walletBox && walletSpan) {
+                walletSpan.innerText = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+                walletBox.classList.remove('hidden');
+            }
+        }
+
+        // 2. Xử lý xem trước ảnh khi chọn File
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('previewContainer').classList.remove('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function resetMintButton() {
+            const mintBtn = document.getElementById('mintBtn');
+            if (!mintBtn) return;
+            mintBtn.disabled = false;
+            mintBtn.className = "w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center space-x-2";
+            mintBtn.innerHTML = `
+                <span>2. Record provenance on-chain</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            `;
+        }
+
+        function setMintButtonSuccess() {
+            const mintBtn = document.getElementById('mintBtn');
+            if (!mintBtn) return;
+            mintBtn.disabled = true; // Khóa nút tránh mint lặp lại cùng 1 cert
+            mintBtn.className = "w-full py-3.5 px-6 rounded-xl font-bold text-sm bg-slate-500 text-white shadow-none transition-all flex items-center justify-center space-x-2 cursor-not-allowed";
+            mintBtn.innerHTML = `
+                <span> Recorded successfully!</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            `;
+        }
+
+        // 3. Xử lý Submit Form bằng Fetch API
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const formData = new FormData(this);
+
+            submitBtn.disabled = true;
+            btnText.innerText = "Processing & Uploading to Pinata IPFS...";
+
+            try {
+                const response = await fetch('/register/api', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                console.log("Response data from backend:", result);
+
+                if (response.ok && (result.success || result.hash || result.artworkHash)) {
+                    const hashValue = result.hashSHA256 || result.hash || result.artworkHash || 'N/A';
+                    const uriValue = result.ipfsGatewayUrl || (result.ipfsCid ? `https://gateway.pinata.cloud/ipfs/${result.ipfsCid}` : 'N/A');
+                    
+                    const certIdValue = result.certId || `CERT-${Date.now()}`;
+
+                    document.getElementById('resHash').innerText = hashValue;
+                    document.getElementById('resUri').innerText = uriValue;
+
+                    const mintBtn = document.getElementById('mintBtn');
+                    if (mintBtn) {
+                        // Gán certId vào attribute data-cert-id của nút mint
+                        mintBtn.setAttribute('data-cert-id', certIdValue);
+                    }
+                    
+                    resetMintButton();
+
+                    document.getElementById('resultBox').classList.remove('hidden');
+                } else {
+                    alert('Upload thất bại: ' + (result.message || 'Lỗi server'));
+                }
+            } catch (error) {
+                console.error('Lỗi khi tải lên:', error);
+                alert('Có lỗi xảy ra kết nối tới Server!');
+            } finally {
+                submitBtn.disabled = false;
+                btnText.innerText = "1. Hash image & Upload to IPFS";
+            }
+        });
+
+        async function mintNFTOnChain() {
+
+            if (!CONTRACT_ADDRESS || !CONTRACT_ABI || CONTRACT_ABI.length === 0) {
+                alert("Chưa tải được ABI/Address của Smart Contract. Vui lòng kiểm tra lại Terminal backend!");
+                await loadContractConfig();
+                return;
+            }
+
+            const mintBtn = document.getElementById('mintBtn');
+            
+            const certId = mintBtn.getAttribute('data-cert-id') || "";
+            
+            const rawHash = document.getElementById('resHash').innerText.trim();
+            const hashVal = rawHash.startsWith('0x') ? rawHash : '0x' + rawHash;
+            const uriVal = document.getElementById('resUri').innerText.trim();
+
+            if (!certId || !hashVal || !uriVal || hashVal === '0xN/A' || uriVal === 'N/A') {
+                alert("Vui lòng thực hiện bước 1 (Hash & IPFS Upload) trước khi Mint!");
+                return;
+            }
+
+            if (typeof window.ethereum === 'undefined') {
+                alert("Không tìm thấy ví MetaMask! Vui lòng cài đặt extension MetaMask.");
+                return;
+            }
+
+            try {
+                mintBtn.disabled = true;
+                mintBtn.innerText = "Connecting Wallet...";
+
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const userAddress = accounts[0];
+                updateWalletBadge(userAddress);
+
+                mintBtn.innerText = "Confirm transaction in wallet...";
+
+                if (window.ethers) {
+                    let provider, signer;
+                    
+                    if (window.ethers.BrowserProvider) { 
+                        provider = new window.ethers.BrowserProvider(window.ethereum);
+                        signer = await provider.getSigner();
+                    } else { 
+                        provider = new window.ethers.providers.Web3Provider(window.ethereum);
+                        signer = provider.getSigner();
+                    }
+
+                    const contract = new window.ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+                    
+                    // GỌI SMART CONTRACT VỚI BIẾN certId
+                    const tx = await contract.registerArtwork(certId, hashVal, uriVal);
+
+                    mintBtn.innerText = "Recording on Blockchain (Pending)...";
+                    const receipt = await tx.wait();
+
+                    try {
+                        const updateDbResponse = await fetch('/mint/confirm', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                certId: certId,
+                                imageHash: hashVal,
+                                ownerAddress: userAddress,
+                                transactionHash: receipt.hash || tx.hash
+                            })
+                        });
+
+                        const dbResult = await updateDbResponse.json();
+                        if (!updateDbResponse.ok || !dbResult.success) {
+                            console.error("Lỗi cập nhật Database:", dbResult.message);
+                        }
+                    } catch (dbError) {
+                        console.error("Không thể kết nối đến server để cập nhật DB:", dbError);
+                    }
+
+                    setMintButtonSuccess();
+                } else {
+                    const response = await fetch('/mint/confirm', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            certId: certId,
+                            hash: hashVal,
+                            tokenURI: uriVal,
+                            walletAddress: userAddress,
+                            transactionHash: "PENDING_BACKEND_MINT"
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (response.ok && result.success) {
+                        setMintButtonSuccess();
+                    } else {
+                        throw new Error(result.message || "Giao dịch mint thất bại từ phía server.");
+                    }
+                }
+
+            } catch (error) {
+                console.error("Minting Error:", error);
+                alert("Lỗi quá trình Minting: " + (error.reason || error.message || "User denied transaction"));
+                resetMintButton();
+            }
+        }
+    </script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
