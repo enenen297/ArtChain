@@ -13,7 +13,6 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Database connection
 db.connect();
 
 // Middleware xử lý dữ liệu
